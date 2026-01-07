@@ -14,10 +14,12 @@ export interface Task {
 export interface Settings {
   taskCreationSkill: string;
   overdueSkill: string;
-  doneSkill1: string;
-  doneDuration1: number;
-  doneSkill2: string;
-  doneDuration2: number;
+  // DONE sequence settings
+  doneSkill1: string;       // Dropdown skill
+  servoCommand1: string;    // Text: e.g., "m1 0 180"
+  servoCommand2: string;    // Text: e.g., "m1 0 180"
+  doneSkill2: string;       // Text: e.g., "kvtL"
+  doneSkill3: string;       // Text: e.g., "kup"
 }
 
 const TASKS_KEY = 'bittle_tasks';
@@ -26,10 +28,11 @@ const SETTINGS_KEY = 'bittle_settings';
 export const DEFAULT_SETTINGS: Settings = {
   taskCreationSkill: 'khi',
   overdueSkill: 'kpd',
-  doneSkill1: 'kchr',
-  doneDuration1: 10,
-  doneSkill2: 'khg',
-  doneDuration2: 10,
+  doneSkill1: 'kbx',
+  servoCommand1: 'm1 0 180',
+  servoCommand2: 'm1 0 180',
+  doneSkill2: 'kvtL',
+  doneSkill3: 'kup',
 };
 
 export function getTasks(): Task[] {

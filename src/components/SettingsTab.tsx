@@ -45,7 +45,7 @@ export function SettingsTab({ logs, clearLogs, sendRawCommand, sendDigitalWrite,
         <CardHeader>
           <CardTitle className="flex items-center gap-3">
             <Settings className="h-6 w-6 text-primary" />
-            Skill Settings
+            Automatic Commands
           </CardTitle>
           <CardDescription>
             Configure which skills Bittle performs for each event
@@ -88,71 +88,81 @@ export function SettingsTab({ logs, clearLogs, sendRawCommand, sendDigitalWrite,
             </Select>
           </div>
 
-          {/* Done Reward Sequence */}
+          {/* Done Reward Sequence - Updated for Precision Flow */}
           <div className="space-y-4 p-4 rounded-lg bg-muted/30 border border-border/50">
             <h4 className="font-medium flex items-center gap-2">
               <Zap className="h-4 w-4 text-success" />
-              Done Reward Sequence
+              DONE Reward Sequence (12-step precision flow)
             </h4>
             
+            <p className="text-xs text-muted-foreground">
+              Sequence: Skill #1 → 1s → Servo Cmd 1 → 1s → Motor ON → 1s → Servo Cmd 2 → 1s → Skill #2 → 3s → Skill #3 → 1s → Motor OFF
+            </p>
+            
+            {/* Skill #1 - Dropdown */}
+            <div className="space-y-2">
+              <Label>Skill #1 (Dropdown)</Label>
+              <Select 
+                value={settings.doneSkill1} 
+                onValueChange={(v) => setSettings(s => ({ ...s, doneSkill1: v }))}
+              >
+                <SelectTrigger className="bg-input/50">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-card border-border max-h-60">
+                  {SKILL_OPTIONS.map(skill => (
+                    <SelectItem key={skill} value={skill}>{skill}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Servo Commands */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Skill #1</Label>
-                <Select 
-                  value={settings.doneSkill1} 
-                  onValueChange={(v) => setSettings(s => ({ ...s, doneSkill1: v }))}
-                >
-                  <SelectTrigger className="bg-input/50">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-card border-border max-h-60">
-                    {SKILL_OPTIONS.map(skill => (
-                      <SelectItem key={skill} value={skill}>{skill}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Servo Command 1</Label>
+                <Input
+                  type="text"
+                  value={settings.servoCommand1}
+                  onChange={(e) => setSettings(s => ({ ...s, servoCommand1: e.target.value }))}
+                  placeholder="m1 0 180"
+                  className="bg-input/50 font-mono"
+                />
               </div>
               
               <div className="space-y-2">
-                <Label>Motor Duration #1 (sec)</Label>
+                <Label>Servo Command 2</Label>
                 <Input
-                  type="number"
-                  min={1}
-                  max={60}
-                  value={settings.doneDuration1}
-                  onChange={(e) => setSettings(s => ({ ...s, doneDuration1: parseInt(e.target.value) || 10 }))}
-                  className="bg-input/50"
+                  type="text"
+                  value={settings.servoCommand2}
+                  onChange={(e) => setSettings(s => ({ ...s, servoCommand2: e.target.value }))}
+                  placeholder="m1 0 180"
+                  className="bg-input/50 font-mono"
                 />
               </div>
             </div>
 
+            {/* Skill #2 and #3 - Text inputs */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Skill #2</Label>
-                <Select 
-                  value={settings.doneSkill2} 
-                  onValueChange={(v) => setSettings(s => ({ ...s, doneSkill2: v }))}
-                >
-                  <SelectTrigger className="bg-input/50">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-card border-border max-h-60">
-                    {SKILL_OPTIONS.map(skill => (
-                      <SelectItem key={skill} value={skill}>{skill}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <Label>Skill #2 (Text)</Label>
+                <Input
+                  type="text"
+                  value={settings.doneSkill2}
+                  onChange={(e) => setSettings(s => ({ ...s, doneSkill2: e.target.value }))}
+                  placeholder="kvtL"
+                  className="bg-input/50 font-mono"
+                />
               </div>
               
               <div className="space-y-2">
-                <Label>Motor Duration #2 (sec)</Label>
+                <Label>Skill #3 (Text)</Label>
                 <Input
-                  type="number"
-                  min={1}
-                  max={60}
-                  value={settings.doneDuration2}
-                  onChange={(e) => setSettings(s => ({ ...s, doneDuration2: parseInt(e.target.value) || 10 }))}
-                  className="bg-input/50"
+                  type="text"
+                  value={settings.doneSkill3}
+                  onChange={(e) => setSettings(s => ({ ...s, doneSkill3: e.target.value }))}
+                  placeholder="kup"
+                  className="bg-input/50 font-mono"
                 />
               </div>
             </div>
@@ -171,7 +181,7 @@ export function SettingsTab({ logs, clearLogs, sendRawCommand, sendDigitalWrite,
         <CardContent className="space-y-4">
           <div className="flex gap-2">
             <Input
-              placeholder="Enter command..."
+              placeholder="Enter command (e.g., ksit, m1 0 180)..."
               value={manualCommand}
               onChange={(e) => setManualCommand(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSendManual()}
@@ -218,7 +228,7 @@ export function SettingsTab({ logs, clearLogs, sendRawCommand, sendDigitalWrite,
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="flex items-center gap-3">
             <Terminal className="h-6 w-6 text-terminal-text" />
-            Serial Monitor
+            Serial Monitor (TX/RX Log)
           </CardTitle>
           <Button variant="ghost" size="sm" onClick={clearLogs}>
             Clear

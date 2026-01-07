@@ -17,6 +17,7 @@ const Index = () => {
     sendSkill, 
     sendDigitalWrite, 
     sendRawCommand,
+    sendServoCommand,
     forceStopMotor,
     clearLogs 
   } = useSerial();
@@ -56,7 +57,7 @@ const Index = () => {
           <TabsList className="grid grid-cols-4 bg-muted/50 p-1">
             <TabsTrigger value="connection" className="gap-2 data-[state=active]:bg-card">
               <Usb className="h-4 w-4" />
-              <span className="hidden sm:inline">Connection</span>
+              <span className="hidden sm:inline">Serial</span>
             </TabsTrigger>
             <TabsTrigger value="create" className="gap-2 data-[state=active]:bg-card">
               <PlusCircle className="h-4 w-4" />
@@ -95,6 +96,8 @@ const Index = () => {
               isConnected={isConnected}
               sendSkill={sendSkill}
               sendDigitalWrite={sendDigitalWrite}
+              sendServoCommand={sendServoCommand}
+              forceStopMotor={forceStopMotor}
             />
           </TabsContent>
 

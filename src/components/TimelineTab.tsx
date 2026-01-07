@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { Check, Trash2, AlertCircle } from 'lucide-react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { Check, Trash2, AlertCircle, StopCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
@@ -18,6 +18,8 @@ interface TimelineTabProps {
   isConnected: boolean;
   sendSkill: (skill: string) => Promise<void>;
   sendDigitalWrite: (port: number, value: 0 | 1) => Promise<void>;
+  sendServoCommand: (command: string) => Promise<void>;
+  forceStopMotor: () => Promise<void>;
 }
 
 // Sleep helper in milliseconds
@@ -25,11 +27,20 @@ function sleepMs(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export function TimelineTab({ refreshKey, isConnected, sendSkill, sendDigitalWrite }: TimelineTabProps) {
+export function TimelineTab({ 
+  refreshKey, 
+  isConnected, 
+  sendSkill, 
+  sendDigitalWrite, 
+  sendServoCommand,
+  forceStopMotor 
+}: TimelineTabProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [currentTime, setCurrentTime] = useState(getCurrentTimeInMinutes());
   const [processingTask, setProcessingTask] = useState<string | null>(null);
   const [sequenceLock, setSequenceLock] = useState(false);
+  const [currentStep, setCurrentStep] = useState<string | null>(null);
+  const abortRef = useRef(false);
 
   const loadTasks = useCallback(() => {
     setTasks(getTasks());
@@ -78,9 +89,20 @@ export function TimelineTab({ refreshKey, isConnected, sendSkill, sendDigitalWri
     checkOverdue();
   }, [currentTime, isConnected, sendSkill]);
 
+  // Emergency stop handler
+  const handleEmergencyStop = async () => {
+    abortRef.current = true;
+    setCurrentStep('EMERGENCY STOP');
+    await forceStopMotor();
+    setSequenceLock(false);
+    setProcessingTask(null);
+    setCurrentStep(null);
+    abortRef.current = false;
+  };
+
   /**
-   * DONE Sequence with proper timing and buffer handling
-   * Wrapped in try...finally to prevent stuck state
+   * DONE Sequence - Precision Reward Flow
+   * 12-step async sequence with proper timing
    */
   const handleDone = async (task: Task) => {
     // Prevent double-click triggering
@@ -88,6 +110,7 @@ export function TimelineTab({ refreshKey, isConnected, sendSkill, sendDigitalWri
     
     setProcessingTask(task.id);
     setSequenceLock(true);
+    abortRef.current = false;
     
     const settings = getSettings();
 
@@ -104,51 +127,84 @@ export function TimelineTab({ refreshKey, isConnected, sendSkill, sendDigitalWri
     // Execute the DONE sequence with try...finally for reliability
     try {
       if (isConnected) {
-        console.log(`[${new Date().toISOString()}] === STARTING DONE SEQUENCE ===`);
+        console.log(`[${new Date().toISOString()}] === STARTING PRECISION DONE SEQUENCE ===`);
         console.log(`Task: ${task.title}`);
 
         // Step 1: Send Skill #1
-        console.log(`[${new Date().toISOString()}] Step 1: Sending Skill 1 (${settings.doneSkill1})`);
+        if (abortRef.current) throw new Error('Aborted');
+        setCurrentStep('Step 1/12: Skill #1');
+        console.log(`[${new Date().toISOString()}] Step 1: Sending Skill #1 (${settings.doneSkill1})`);
         await sendSkill(settings.doneSkill1);
         
-        // Mandatory 1000ms wait for Bittle to start motion and clear buffer
-        console.log(`[${new Date().toISOString()}] Waiting 1000ms for buffer clear...`);
+        // Wait 1 second
+        if (abortRef.current) throw new Error('Aborted');
+        setCurrentStep('Step 2/12: Wait 1s');
+        console.log(`[${new Date().toISOString()}] Step 2: Waiting 1000ms...`);
         await sleepMs(1000);
         
-        // Step 2: Motor ON
-        console.log(`[${new Date().toISOString()}] Step 2: Motor 9 HIGH`);
+        // Step 3: Send Servo Command 1
+        if (abortRef.current) throw new Error('Aborted');
+        setCurrentStep('Step 3/12: Servo Cmd 1');
+        console.log(`[${new Date().toISOString()}] Step 3: Sending Servo Command 1 (${settings.servoCommand1})`);
+        await sendServoCommand(settings.servoCommand1);
+        
+        // Wait 1 second
+        if (abortRef.current) throw new Error('Aborted');
+        setCurrentStep('Step 4/12: Wait 1s');
+        console.log(`[${new Date().toISOString()}] Step 4: Waiting 1000ms...`);
+        await sleepMs(1000);
+        
+        // Step 5: Motor ON
+        if (abortRef.current) throw new Error('Aborted');
+        setCurrentStep('Step 5/12: Motor ON');
+        console.log(`[${new Date().toISOString()}] Step 5: Motor 9 HIGH`);
         await sendDigitalWrite(9, 1);
         
-        // Step 3: Wait for user-configured duration
-        console.log(`[${new Date().toISOString()}] Step 3: Waiting ${settings.doneDuration1} seconds...`);
-        await sleepMs(settings.doneDuration1 * 1000);
+        // Wait 1 second
+        if (abortRef.current) throw new Error('Aborted');
+        setCurrentStep('Step 6/12: Wait 1s');
+        console.log(`[${new Date().toISOString()}] Step 6: Waiting 1000ms...`);
+        await sleepMs(1000);
         
-        // Step 4: Motor OFF
-        console.log(`[${new Date().toISOString()}] Step 4: Motor 9 LOW`);
-        await sendDigitalWrite(9, 0);
+        // Step 7: Send Servo Command 2
+        if (abortRef.current) throw new Error('Aborted');
+        setCurrentStep('Step 7/12: Servo Cmd 2');
+        console.log(`[${new Date().toISOString()}] Step 7: Sending Servo Command 2 (${settings.servoCommand2})`);
+        await sendServoCommand(settings.servoCommand2);
         
-        // Brief pause before next skill
-        console.log(`[${new Date().toISOString()}] Pause 500ms before Skill 2...`);
-        await sleepMs(500);
+        // Wait 1 second
+        if (abortRef.current) throw new Error('Aborted');
+        setCurrentStep('Step 8/12: Wait 1s');
+        console.log(`[${new Date().toISOString()}] Step 8: Waiting 1000ms...`);
+        await sleepMs(1000);
         
-        // Step 5: Send Skill #2
-        console.log(`[${new Date().toISOString()}] Step 5: Sending Skill 2 (${settings.doneSkill2})`);
+        // Step 9: Send Skill #2
+        if (abortRef.current) throw new Error('Aborted');
+        setCurrentStep('Step 9/12: Skill #2');
+        console.log(`[${new Date().toISOString()}] Step 9: Sending Skill #2 (${settings.doneSkill2})`);
         await sendSkill(settings.doneSkill2);
         
-        // Mandatory 1000ms wait
-        console.log(`[${new Date().toISOString()}] Waiting 1000ms for buffer clear...`);
+        // Wait 3 seconds
+        if (abortRef.current) throw new Error('Aborted');
+        setCurrentStep('Step 10/12: Wait 3s');
+        console.log(`[${new Date().toISOString()}] Step 10: Waiting 3000ms...`);
+        await sleepMs(3000);
+        
+        // Step 11: Send Skill #3
+        if (abortRef.current) throw new Error('Aborted');
+        setCurrentStep('Step 11/12: Skill #3');
+        console.log(`[${new Date().toISOString()}] Step 11: Sending Skill #3 (${settings.doneSkill3})`);
+        await sendSkill(settings.doneSkill3);
+        
+        // Wait 1 second
+        if (abortRef.current) throw new Error('Aborted');
+        setCurrentStep('Step 12/12: Wait 1s');
+        console.log(`[${new Date().toISOString()}] Step 12: Waiting 1000ms...`);
         await sleepMs(1000);
         
-        // Step 6: Motor ON
-        console.log(`[${new Date().toISOString()}] Step 6: Motor 9 HIGH`);
-        await sendDigitalWrite(9, 1);
-        
-        // Step 7: Wait for user-configured duration
-        console.log(`[${new Date().toISOString()}] Step 7: Waiting ${settings.doneDuration2} seconds...`);
-        await sleepMs(settings.doneDuration2 * 1000);
-        
-        // Step 8: Motor OFF
-        console.log(`[${new Date().toISOString()}] Step 8: Motor 9 LOW`);
+        // Final: Motor OFF
+        setCurrentStep('Final: Motor OFF');
+        console.log(`[${new Date().toISOString()}] Final: Motor 9 LOW`);
         await sendDigitalWrite(9, 0);
 
         console.log(`[${new Date().toISOString()}] === DONE SEQUENCE COMPLETED ===`);
@@ -165,6 +221,7 @@ export function TimelineTab({ refreshKey, isConnected, sendSkill, sendDigitalWri
       // Always release the lock
       setProcessingTask(null);
       setSequenceLock(false);
+      setCurrentStep(null);
     }
   };
 
@@ -229,13 +286,29 @@ export function TimelineTab({ refreshKey, isConnected, sendSkill, sendDigitalWri
         </CardContent>
       </Card>
 
-      {/* Sequence Running Indicator */}
+      {/* Sequence Running Indicator with Emergency Stop */}
       {sequenceLock && (
         <Card className="border-primary/50 bg-primary/10">
           <CardContent className="py-4">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 bg-primary rounded-full animate-pulse" />
-              <span className="font-medium text-primary">DONE sequence running...</span>
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="w-3 h-3 bg-primary rounded-full animate-pulse" />
+                <div>
+                  <span className="font-medium text-primary">DONE sequence running</span>
+                  {currentStep && (
+                    <p className="text-sm text-muted-foreground font-mono">{currentStep}</p>
+                  )}
+                </div>
+              </div>
+              <Button
+                onClick={handleEmergencyStop}
+                variant="destructive"
+                size="sm"
+                className="gap-2"
+              >
+                <StopCircle className="h-4 w-4" />
+                STOP MOTOR
+              </Button>
             </div>
           </CardContent>
         </Card>
