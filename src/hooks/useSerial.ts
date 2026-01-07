@@ -36,6 +36,11 @@ export function useSerial() {
     await serialManager.sendRawCommand(command);
   }, []);
 
+  // Send servo/ASCII commands (same as raw but semantic naming)
+  const sendServoCommand = useCallback(async (command: string) => {
+    await serialManager.sendRawCommand(command);
+  }, []);
+
   const forceStopMotor = useCallback(async (port: number = 9) => {
     await serialManager.forceStopMotor(port);
   }, []);
@@ -52,6 +57,7 @@ export function useSerial() {
     sendSkill,
     sendDigitalWrite,
     sendRawCommand,
+    sendServoCommand,
     forceStopMotor,
     clearLogs,
   };
