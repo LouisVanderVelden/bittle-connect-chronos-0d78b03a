@@ -17,6 +17,7 @@ const Index = () => {
     sendSkill, 
     sendDigitalWrite, 
     sendRawCommand,
+    forceStopMotor,
     clearLogs 
   } = useSerial();
 
@@ -76,6 +77,7 @@ const Index = () => {
               isConnected={isConnected}
               onConnect={connect}
               onDisconnect={disconnect}
+              onForceStopMotor={forceStopMotor}
             />
           </TabsContent>
 

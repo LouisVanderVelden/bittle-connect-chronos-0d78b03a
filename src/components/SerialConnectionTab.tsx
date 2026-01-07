@@ -1,4 +1,4 @@
-import { Usb, Unplug, Wifi, WifiOff } from 'lucide-react';
+import { Usb, Unplug, Wifi, WifiOff, StopCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 
@@ -6,9 +6,10 @@ interface SerialConnectionTabProps {
   isConnected: boolean;
   onConnect: () => Promise<boolean>;
   onDisconnect: () => Promise<void>;
+  onForceStopMotor: () => Promise<void>;
 }
 
-export function SerialConnectionTab({ isConnected, onConnect, onDisconnect }: SerialConnectionTabProps) {
+export function SerialConnectionTab({ isConnected, onConnect, onDisconnect, onForceStopMotor }: SerialConnectionTabProps) {
   return (
     <div className="space-y-6">
       <Card className="border-border/50">
@@ -60,6 +61,19 @@ export function SerialConnectionTab({ isConnected, onConnect, onDisconnect }: Se
               </Button>
             )}
           </div>
+
+          {/* Force Stop Motor Button */}
+          {isConnected && (
+            <Button
+              onClick={onForceStopMotor}
+              variant="outline"
+              className="w-full gap-2 border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+              size="lg"
+            >
+              <StopCircle className="h-5 w-5" />
+              Force Stop Motor (Port 9)
+            </Button>
+          )}
 
           <div className="text-sm text-muted-foreground space-y-2">
             <p className="font-medium text-foreground">Instructions:</p>
