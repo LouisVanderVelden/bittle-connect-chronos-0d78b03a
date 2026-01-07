@@ -102,7 +102,7 @@ export function TimelineTab({
 
   /**
    * DONE Sequence - Precision Reward Flow
-   * 12-step async sequence with proper timing
+   * 8-step async sequence with mandatory 3-second delays between every command
    */
   const handleDone = async (task: Task) => {
     // Prevent double-click triggering
@@ -127,85 +127,91 @@ export function TimelineTab({
     // Execute the DONE sequence with try...finally for reliability
     try {
       if (isConnected) {
-        console.log(`[${new Date().toISOString()}] === STARTING PRECISION DONE SEQUENCE ===`);
+        console.log(`[${new Date().toISOString()}] === STARTING 3-SECOND PRECISION DONE SEQUENCE ===`);
         console.log(`Task: ${task.title}`);
 
         // Step 1: Send Skill #1
         if (abortRef.current) throw new Error('Aborted');
-        setCurrentStep('Step 1/12: Skill #1');
+        setCurrentStep('Step 1/8: Skill #1');
         console.log(`[${new Date().toISOString()}] Step 1: Sending Skill #1 (${settings.doneSkill1})`);
         await sendSkill(settings.doneSkill1);
         
-        // Wait 1 second
+        // Wait 3 seconds
         if (abortRef.current) throw new Error('Aborted');
-        setCurrentStep('Step 2/12: Wait 1s');
-        console.log(`[${new Date().toISOString()}] Step 2: Waiting 1000ms...`);
-        await sleepMs(1000);
+        setCurrentStep('Waiting 3s...');
+        console.log(`[${new Date().toISOString()}] Waiting 3000ms...`);
+        await sleepMs(3000);
         
-        // Step 3: Send Servo Command 1
+        // Step 2: Send Servo Command 1
         if (abortRef.current) throw new Error('Aborted');
-        setCurrentStep('Step 3/12: Servo Cmd 1');
-        console.log(`[${new Date().toISOString()}] Step 3: Sending Servo Command 1 (${settings.servoCommand1})`);
+        setCurrentStep('Step 2/8: Servo Cmd 1');
+        console.log(`[${new Date().toISOString()}] Step 2: Sending Servo Command 1 (${settings.servoCommand1})`);
         await sendServoCommand(settings.servoCommand1);
         
-        // Wait 1 second
+        // Wait 3 seconds
         if (abortRef.current) throw new Error('Aborted');
-        setCurrentStep('Step 4/12: Wait 1s');
-        console.log(`[${new Date().toISOString()}] Step 4: Waiting 1000ms...`);
-        await sleepMs(1000);
+        setCurrentStep('Waiting 3s...');
+        console.log(`[${new Date().toISOString()}] Waiting 3000ms...`);
+        await sleepMs(3000);
         
-        // Step 5: Motor ON
+        // Step 3: Motor ON
         if (abortRef.current) throw new Error('Aborted');
-        setCurrentStep('Step 5/12: Motor ON');
-        console.log(`[${new Date().toISOString()}] Step 5: Motor 9 HIGH`);
+        setCurrentStep('Step 3/8: Motor ON');
+        console.log(`[${new Date().toISOString()}] Step 3: Motor 9 HIGH`);
         await sendDigitalWrite(9, 1);
         
-        // Wait 1 second
+        // Wait 3 seconds
         if (abortRef.current) throw new Error('Aborted');
-        setCurrentStep('Step 6/12: Wait 1s');
-        console.log(`[${new Date().toISOString()}] Step 6: Waiting 1000ms...`);
-        await sleepMs(1000);
+        setCurrentStep('Waiting 3s...');
+        console.log(`[${new Date().toISOString()}] Waiting 3000ms...`);
+        await sleepMs(3000);
         
-        // Step 7: Send Servo Command 2
+        // Step 4: Send Servo Command 2
         if (abortRef.current) throw new Error('Aborted');
-        setCurrentStep('Step 7/12: Servo Cmd 2');
-        console.log(`[${new Date().toISOString()}] Step 7: Sending Servo Command 2 (${settings.servoCommand2})`);
+        setCurrentStep('Step 4/8: Servo Cmd 2');
+        console.log(`[${new Date().toISOString()}] Step 4: Sending Servo Command 2 (${settings.servoCommand2})`);
         await sendServoCommand(settings.servoCommand2);
         
-        // Wait 1 second
+        // Wait 3 seconds
         if (abortRef.current) throw new Error('Aborted');
-        setCurrentStep('Step 8/12: Wait 1s');
-        console.log(`[${new Date().toISOString()}] Step 8: Waiting 1000ms...`);
-        await sleepMs(1000);
+        setCurrentStep('Waiting 3s...');
+        console.log(`[${new Date().toISOString()}] Waiting 3000ms...`);
+        await sleepMs(3000);
         
-        // Step 9: Send Skill #2
+        // Step 5: Send Skill #2
         if (abortRef.current) throw new Error('Aborted');
-        setCurrentStep('Step 9/12: Skill #2');
-        console.log(`[${new Date().toISOString()}] Step 9: Sending Skill #2 (${settings.doneSkill2})`);
+        setCurrentStep('Step 5/8: Skill #2');
+        console.log(`[${new Date().toISOString()}] Step 5: Sending Skill #2 (${settings.doneSkill2})`);
         await sendSkill(settings.doneSkill2);
         
         // Wait 3 seconds
         if (abortRef.current) throw new Error('Aborted');
-        setCurrentStep('Step 10/12: Wait 3s');
-        console.log(`[${new Date().toISOString()}] Step 10: Waiting 3000ms...`);
+        setCurrentStep('Waiting 3s...');
+        console.log(`[${new Date().toISOString()}] Waiting 3000ms...`);
         await sleepMs(3000);
         
-        // Step 11: Send Skill #3
+        // Step 6: Send Skill #3
         if (abortRef.current) throw new Error('Aborted');
-        setCurrentStep('Step 11/12: Skill #3');
-        console.log(`[${new Date().toISOString()}] Step 11: Sending Skill #3 (${settings.doneSkill3})`);
+        setCurrentStep('Step 6/8: Skill #3');
+        console.log(`[${new Date().toISOString()}] Step 6: Sending Skill #3 (${settings.doneSkill3})`);
         await sendSkill(settings.doneSkill3);
         
-        // Wait 1 second
+        // Wait 3 seconds
         if (abortRef.current) throw new Error('Aborted');
-        setCurrentStep('Step 12/12: Wait 1s');
-        console.log(`[${new Date().toISOString()}] Step 12: Waiting 1000ms...`);
-        await sleepMs(1000);
+        setCurrentStep('Waiting 3s...');
+        console.log(`[${new Date().toISOString()}] Waiting 3000ms...`);
+        await sleepMs(3000);
         
-        // Final: Motor OFF
-        setCurrentStep('Final: Motor OFF');
-        console.log(`[${new Date().toISOString()}] Final: Motor 9 LOW`);
+        // Step 7: Motor OFF
+        if (abortRef.current) throw new Error('Aborted');
+        setCurrentStep('Step 7/8: Motor OFF');
+        console.log(`[${new Date().toISOString()}] Step 7: Motor 9 LOW`);
         await sendDigitalWrite(9, 0);
+        
+        // Wait 3 seconds (end sequence)
+        setCurrentStep('Step 8/8: Final wait 3s');
+        console.log(`[${new Date().toISOString()}] Step 8: Final wait 3000ms...`);
+        await sleepMs(3000);
 
         console.log(`[${new Date().toISOString()}] === DONE SEQUENCE COMPLETED ===`);
       }
