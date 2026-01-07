@@ -24,6 +24,22 @@ export interface SerialLog {
 
 type LogCallback = (log: SerialLog) => void;
 
+// Helper to format timestamp for logs
+function formatTime(): string {
+  const now = new Date();
+  return now.toLocaleTimeString('en-US', { 
+    hour12: false, 
+    hour: '2-digit', 
+    minute: '2-digit', 
+    second: '2-digit' 
+  });
+}
+
+// Sleep helper with milliseconds
+function delay(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 class SerialManager {
   private port: SerialPort | null = null;
   private reader: ReadableStreamDefaultReader<Uint8Array> | null = null;
@@ -72,10 +88,10 @@ class SerialManager {
         this.startReading();
       }
 
-      this.log('info', 'Connected to Bittle at 115200 baud');
+      this.log('info', `${formatTime()} - Connected to Bittle at 115200 baud`);
       return true;
     } catch (error) {
-      this.log('error', `Connection failed: ${error}`);
+      this.log('error', `${formatTime()} - Connection failed: ${error}`);
       return false;
     }
   }
@@ -100,9 +116,9 @@ class SerialManager {
         this.port = null;
       }
 
-      this.log('info', 'Disconnected from Bittle');
+      this.log('info', `${formatTime()} - Disconnected from Bittle`);
     } catch (error) {
-      this.log('error', `Disconnect error: ${error}`);
+      this.log('error', `${formatTime()} - Disconnect error: ${error}`);
     }
   }
 
@@ -123,7 +139,7 @@ class SerialManager {
       }
     } catch (error) {
       if (this.isReading) {
-        this.log('error', `Read error: ${error}`);
+        this.log('error', `${formatTime()} - Read error: ${error}`);
       }
     }
   }
@@ -146,48 +162,75 @@ class SerialManager {
       const command = this.commandQueue.shift();
       if (command) {
         await command();
-        // Small delay between commands to prevent overlap
-        await new Promise(r => setTimeout(r, 50));
+        // Delay between commands to ensure buffer is clear
+        await delay(50);
       }
     }
 
     this.isProcessingQueue = false;
   }
 
+  /**
+   * Send Digital Write command with robust timing
+   * Sends: [87='W', 100='d', port, value] as 4-byte Uint8Array
+   */
   async sendDigitalWrite(port: number, value: 0 | 1): Promise<void> {
     return this.executeCommand(async () => {
       if (!this.isConnected || !this.writer) {
-        this.log('error', 'Not connected - Command skipped');
+        this.log('error', `${formatTime()} - Not connected - DigitalWrite skipped`);
         return;
       }
 
       if (port < 0 || port > 99) {
-        this.log('error', `Invalid port: ${port}. Must be 0-99`);
+        this.log('error', `${formatTime()} - Invalid port: ${port}. Must be 0-99`);
         return;
       }
 
-      // Create the command: "Wd" as ASCII + port as 1-byte + value as 1-byte
-      const encoder = new TextEncoder();
-      const wdBytes = encoder.encode('Wd');
-      const data = new Uint8Array(4);
-      data[0] = wdBytes[0]; // 'W'
-      data[1] = wdBytes[1]; // 'd'
-      data[2] = port;       // port as raw byte
-      data[3] = value;      // value as raw byte
+      // Create the command: [87='W', 100='d', port, value]
+      const data = new Uint8Array([87, 100, port, value]);
 
       try {
+        // Pre-write delay to ensure buffer is ready
+        await delay(50);
+        
         await this.writer.write(data);
-        this.log('tx', `[${new Date().toISOString()}] DigitalWrite: Port ${port} = ${value}`);
+        
+        // Post-write delay to let hardware process
+        await delay(50);
+        
+        const state = value === 1 ? 'HIGH' : 'LOW';
+        this.log('tx', `${formatTime()} - Motor ${port} ${state}`);
       } catch (error) {
-        this.log('error', `Failed to send DigitalWrite: ${error}`);
+        this.log('error', `${formatTime()} - Failed to send DigitalWrite: ${error}`);
       }
     });
+  }
+
+  /**
+   * Force stop motor - immediate command without queue (for emergencies)
+   */
+  async forceStopMotor(port: number = 9): Promise<void> {
+    if (!this.isConnected || !this.writer) {
+      this.log('error', `${formatTime()} - Not connected - Force stop skipped`);
+      return;
+    }
+
+    const data = new Uint8Array([87, 100, port, 0]);
+
+    try {
+      await delay(50);
+      await this.writer.write(data);
+      await delay(50);
+      this.log('tx', `${formatTime()} - FORCE STOP Motor ${port}`);
+    } catch (error) {
+      this.log('error', `${formatTime()} - Failed to force stop motor: ${error}`);
+    }
   }
 
   async sendSkill(skill: string): Promise<void> {
     return this.executeCommand(async () => {
       if (!this.isConnected || !this.writer) {
-        this.log('error', 'Not connected - Command skipped');
+        this.log('error', `${formatTime()} - Not connected - Skill skipped`);
         return;
       }
 
@@ -195,10 +238,12 @@ class SerialManager {
       const data = encoder.encode(skill + '\n');
 
       try {
+        await delay(50);
         await this.writer.write(data);
-        this.log('tx', `[${new Date().toISOString()}] Skill: ${skill}`);
+        await delay(50);
+        this.log('tx', `${formatTime()} - Sending Skill: ${skill}`);
       } catch (error) {
-        this.log('error', `Failed to send skill: ${error}`);
+        this.log('error', `${formatTime()} - Failed to send skill: ${error}`);
       }
     });
   }
@@ -206,7 +251,7 @@ class SerialManager {
   async sendRawCommand(command: string): Promise<void> {
     return this.executeCommand(async () => {
       if (!this.isConnected || !this.writer) {
-        this.log('error', 'Not connected - Command skipped');
+        this.log('error', `${formatTime()} - Not connected - Command skipped`);
         return;
       }
 
@@ -214,10 +259,12 @@ class SerialManager {
       const data = encoder.encode(command + '\n');
 
       try {
+        await delay(50);
         await this.writer.write(data);
-        this.log('tx', `[${new Date().toISOString()}] Raw: ${command}`);
+        await delay(50);
+        this.log('tx', `${formatTime()} - Raw command: ${command}`);
       } catch (error) {
-        this.log('error', `Failed to send command: ${error}`);
+        this.log('error', `${formatTime()} - Failed to send command: ${error}`);
       }
     });
   }

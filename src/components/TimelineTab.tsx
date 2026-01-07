@@ -20,14 +20,16 @@ interface TimelineTabProps {
   sendDigitalWrite: (port: number, value: 0 | 1) => Promise<void>;
 }
 
-function sleep(seconds: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, seconds * 1000));
+// Sleep helper in milliseconds
+function sleepMs(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 export function TimelineTab({ refreshKey, isConnected, sendSkill, sendDigitalWrite }: TimelineTabProps) {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [currentTime, setCurrentTime] = useState(getCurrentTimeInMinutes());
   const [processingTask, setProcessingTask] = useState<string | null>(null);
+  const [sequenceLock, setSequenceLock] = useState(false);
 
   const loadTasks = useCallback(() => {
     setTasks(getTasks());
@@ -76,10 +78,17 @@ export function TimelineTab({ refreshKey, isConnected, sendSkill, sendDigitalWri
     checkOverdue();
   }, [currentTime, isConnected, sendSkill]);
 
+  /**
+   * DONE Sequence with proper timing and buffer handling
+   * Wrapped in try...finally to prevent stuck state
+   */
   const handleDone = async (task: Task) => {
-    if (processingTask) return;
+    // Prevent double-click triggering
+    if (processingTask || sequenceLock) return;
     
     setProcessingTask(task.id);
+    setSequenceLock(true);
+    
     const settings = getSettings();
 
     // Update task status immediately
@@ -92,38 +101,71 @@ export function TimelineTab({ refreshKey, isConnected, sendSkill, sendDigitalWri
       setTasks(prev => prev.map(t => t.id === task.id ? updatedTask : t));
     }
 
-    // Execute the DONE sequence
-    if (isConnected) {
-      console.log(`[${new Date().toISOString()}] Starting DONE sequence for task: ${task.title}`);
+    // Execute the DONE sequence with try...finally for reliability
+    try {
+      if (isConnected) {
+        console.log(`[${new Date().toISOString()}] === STARTING DONE SEQUENCE ===`);
+        console.log(`Task: ${task.title}`);
 
-      // Step 1: Send Skill #1
-      await sendSkill(settings.doneSkill1);
-      
-      // Step 2: Motor ON
-      await sendDigitalWrite(9, 1);
-      
-      // Step 3: Wait duration #1
-      await sleep(settings.doneDuration1);
-      
-      // Step 4: Motor OFF
-      await sendDigitalWrite(9, 0);
-      
-      // Step 5: Send Skill #2
-      await sendSkill(settings.doneSkill2);
-      
-      // Step 6: Motor ON
-      await sendDigitalWrite(9, 1);
-      
-      // Step 7: Wait duration #2
-      await sleep(settings.doneDuration2);
-      
-      // Step 8: Motor OFF
-      await sendDigitalWrite(9, 0);
+        // Step 1: Send Skill #1
+        console.log(`[${new Date().toISOString()}] Step 1: Sending Skill 1 (${settings.doneSkill1})`);
+        await sendSkill(settings.doneSkill1);
+        
+        // Mandatory 1000ms wait for Bittle to start motion and clear buffer
+        console.log(`[${new Date().toISOString()}] Waiting 1000ms for buffer clear...`);
+        await sleepMs(1000);
+        
+        // Step 2: Motor ON
+        console.log(`[${new Date().toISOString()}] Step 2: Motor 9 HIGH`);
+        await sendDigitalWrite(9, 1);
+        
+        // Step 3: Wait for user-configured duration
+        console.log(`[${new Date().toISOString()}] Step 3: Waiting ${settings.doneDuration1} seconds...`);
+        await sleepMs(settings.doneDuration1 * 1000);
+        
+        // Step 4: Motor OFF
+        console.log(`[${new Date().toISOString()}] Step 4: Motor 9 LOW`);
+        await sendDigitalWrite(9, 0);
+        
+        // Brief pause before next skill
+        console.log(`[${new Date().toISOString()}] Pause 500ms before Skill 2...`);
+        await sleepMs(500);
+        
+        // Step 5: Send Skill #2
+        console.log(`[${new Date().toISOString()}] Step 5: Sending Skill 2 (${settings.doneSkill2})`);
+        await sendSkill(settings.doneSkill2);
+        
+        // Mandatory 1000ms wait
+        console.log(`[${new Date().toISOString()}] Waiting 1000ms for buffer clear...`);
+        await sleepMs(1000);
+        
+        // Step 6: Motor ON
+        console.log(`[${new Date().toISOString()}] Step 6: Motor 9 HIGH`);
+        await sendDigitalWrite(9, 1);
+        
+        // Step 7: Wait for user-configured duration
+        console.log(`[${new Date().toISOString()}] Step 7: Waiting ${settings.doneDuration2} seconds...`);
+        await sleepMs(settings.doneDuration2 * 1000);
+        
+        // Step 8: Motor OFF
+        console.log(`[${new Date().toISOString()}] Step 8: Motor 9 LOW`);
+        await sendDigitalWrite(9, 0);
 
-      console.log(`[${new Date().toISOString()}] DONE sequence completed for task: ${task.title}`);
+        console.log(`[${new Date().toISOString()}] === DONE SEQUENCE COMPLETED ===`);
+      }
+    } catch (error) {
+      console.error(`[${new Date().toISOString()}] DONE sequence error:`, error);
+      // Attempt to turn motor off even if sequence fails
+      try {
+        await sendDigitalWrite(9, 0);
+      } catch {
+        console.error('Failed to turn off motor after error');
+      }
+    } finally {
+      // Always release the lock
+      setProcessingTask(null);
+      setSequenceLock(false);
     }
-
-    setProcessingTask(null);
   };
 
   const handleDelete = (id: string) => {
@@ -187,6 +229,18 @@ export function TimelineTab({ refreshKey, isConnected, sendSkill, sendDigitalWri
         </CardContent>
       </Card>
 
+      {/* Sequence Running Indicator */}
+      {sequenceLock && (
+        <Card className="border-primary/50 bg-primary/10">
+          <CardContent className="py-4">
+            <div className="flex items-center gap-3">
+              <div className="w-3 h-3 bg-primary rounded-full animate-pulse" />
+              <span className="font-medium text-primary">DONE sequence running...</span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Task List */}
       <div className="space-y-3">
         {sortedTasks.length === 0 ? (
@@ -230,7 +284,7 @@ export function TimelineTab({ refreshKey, isConnected, sendSkill, sendDigitalWri
                         size="sm"
                         variant="secondary"
                         onClick={() => handleDone(task)}
-                        disabled={processingTask !== null}
+                        disabled={processingTask !== null || sequenceLock}
                         className="gap-1"
                       >
                         <Check className="h-4 w-4" />
@@ -241,6 +295,7 @@ export function TimelineTab({ refreshKey, isConnected, sendSkill, sendDigitalWri
                       size="sm"
                       variant="ghost"
                       onClick={() => handleDelete(task.id)}
+                      disabled={sequenceLock}
                       className="text-destructive-foreground hover:text-destructive hover:bg-destructive/10"
                     >
                       <Trash2 className="h-4 w-4" />

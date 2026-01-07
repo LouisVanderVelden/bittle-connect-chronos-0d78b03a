@@ -36,6 +36,10 @@ export function useSerial() {
     await serialManager.sendRawCommand(command);
   }, []);
 
+  const forceStopMotor = useCallback(async (port: number = 9) => {
+    await serialManager.forceStopMotor(port);
+  }, []);
+
   const clearLogs = useCallback(() => {
     setLogs([]);
   }, []);
@@ -48,6 +52,7 @@ export function useSerial() {
     sendSkill,
     sendDigitalWrite,
     sendRawCommand,
+    forceStopMotor,
     clearLogs,
   };
 }
