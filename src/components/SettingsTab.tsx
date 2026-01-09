@@ -39,15 +39,15 @@ export function SettingsTab({ logs, clearLogs, sendRawCommand, sendDigitalWrite,
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Skill Settings */}
       <Card className="border-border/50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            <Settings className="h-6 w-6 text-primary" />
+          <CardTitle className="flex items-center gap-3 text-lg">
+            <Settings className="h-5 w-5 text-primary" />
             Automatic Commands
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-sm">
             Configure which skills Bittle performs for each event
           </CardDescription>
         </CardHeader>
@@ -173,8 +173,8 @@ export function SettingsTab({ logs, clearLogs, sendRawCommand, sendDigitalWrite,
       {/* Manual Command */}
       <Card className="border-border/50">
         <CardHeader>
-          <CardTitle className="flex items-center gap-3">
-            <Terminal className="h-6 w-6 text-terminal-text" />
+          <CardTitle className="flex items-center gap-3 text-lg">
+            <Terminal className="h-5 w-5 text-terminal-text" />
             Manual Command
           </CardTitle>
         </CardHeader>
@@ -226,8 +226,8 @@ export function SettingsTab({ logs, clearLogs, sendRawCommand, sendDigitalWrite,
       {/* Serial Monitor */}
       <Card className="border-border/50">
         <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle className="flex items-center gap-3">
-            <Terminal className="h-6 w-6 text-terminal-text" />
+          <CardTitle className="flex items-center gap-3 text-lg">
+            <Terminal className="h-5 w-5 text-terminal-text" />
             Serial Monitor (TX/RX Log)
           </CardTitle>
           <Button variant="ghost" size="sm" onClick={clearLogs}>
