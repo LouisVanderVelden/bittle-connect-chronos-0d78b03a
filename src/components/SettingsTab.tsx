@@ -88,15 +88,15 @@ export function SettingsTab({ logs, clearLogs, sendRawCommand, sendDigitalWrite,
             </Select>
           </div>
 
-          {/* Done Reward Sequence - Updated for Precision Flow */}
+          {/* Done Reward Sequence */}
           <div className="space-y-4 p-4 rounded-lg bg-muted/30 border border-border/50">
             <h4 className="font-medium flex items-center gap-2">
               <Zap className="h-4 w-4 text-success" />
-              DONE Reward Sequence (12-step precision flow)
+              DONE Reward Sequence
             </h4>
             
             <p className="text-xs text-muted-foreground">
-              Sequence: Skill #1 → 1s → Servo Cmd 1 → 1s → Motor ON → 1s → Servo Cmd 2 → 1s → Skill #2 → 3s → Skill #3 → 1s → Motor OFF
+              Skill #1 → 1s → Servo Cmd 1 → 1s → Motor ON → 1s → Skill #2 → 1s → Servo Cmd 2 → 5s → Motor OFF
             </p>
             
             {/* Skill #1 - Dropdown */}
@@ -117,54 +117,40 @@ export function SettingsTab({ logs, clearLogs, sendRawCommand, sendDigitalWrite,
               </Select>
             </div>
 
-            {/* Servo Commands */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Servo Command 1</Label>
-                <Input
-                  type="text"
-                  value={settings.servoCommand1}
-                  onChange={(e) => setSettings(s => ({ ...s, servoCommand1: e.target.value }))}
-                  placeholder="m1 0 180"
-                  className="bg-input/50 font-mono"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Servo Command 2</Label>
-                <Input
-                  type="text"
-                  value={settings.servoCommand2}
-                  onChange={(e) => setSettings(s => ({ ...s, servoCommand2: e.target.value }))}
-                  placeholder="m1 0 180"
-                  className="bg-input/50 font-mono"
-                />
-              </div>
+            {/* Servo Command 1 */}
+            <div className="space-y-2">
+              <Label>Servo Command 1</Label>
+              <Input
+                type="text"
+                value={settings.servoCommand1}
+                onChange={(e) => setSettings(s => ({ ...s, servoCommand1: e.target.value }))}
+                placeholder="m1 0 180"
+                className="bg-input/50 font-mono"
+              />
             </div>
 
-            {/* Skill #2 and #3 - Text inputs */}
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Skill #2 (Text)</Label>
-                <Input
-                  type="text"
-                  value={settings.doneSkill2}
-                  onChange={(e) => setSettings(s => ({ ...s, doneSkill2: e.target.value }))}
-                  placeholder="kvtL"
-                  className="bg-input/50 font-mono"
-                />
-              </div>
-              
-              <div className="space-y-2">
-                <Label>Skill #3 (Text)</Label>
-                <Input
-                  type="text"
-                  value={settings.doneSkill3}
-                  onChange={(e) => setSettings(s => ({ ...s, doneSkill3: e.target.value }))}
-                  placeholder="kup"
-                  className="bg-input/50 font-mono"
-                />
-              </div>
+            {/* Skill #2 - Text input */}
+            <div className="space-y-2">
+              <Label>Skill #2 (Text)</Label>
+              <Input
+                type="text"
+                value={settings.doneSkill2}
+                onChange={(e) => setSettings(s => ({ ...s, doneSkill2: e.target.value }))}
+                placeholder="kvtL"
+                className="bg-input/50 font-mono"
+              />
+            </div>
+
+            {/* Servo Command 2 */}
+            <div className="space-y-2">
+              <Label>Servo Command 2</Label>
+              <Input
+                type="text"
+                value={settings.servoCommand2}
+                onChange={(e) => setSettings(s => ({ ...s, servoCommand2: e.target.value }))}
+                placeholder="m1 0 180"
+                className="bg-input/50 font-mono"
+              />
             </div>
           </div>
         </CardContent>
