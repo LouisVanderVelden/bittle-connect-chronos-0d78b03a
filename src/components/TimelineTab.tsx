@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Check, Trash2, AlertCircle, StopCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   getTasks, 
@@ -334,13 +335,12 @@ export function TimelineTab({
           sortedTasks.map(task => (
             <Card 
               key={task.id} 
-              className={`border-border/50 transition-all ${
-                task.status === 'done' ? 'task-done' :
-                task.status === 'overdue' ? 'task-overdue' :
-                'task-neutral'
-              } ${
-                task.status === 'done' ? 'glow-success' :
-                task.status === 'overdue' ? 'glow-destructive' : ''
+              className={`transition-all ${
+                task.status === 'done' 
+                  ? 'bg-success/15 border-success/50 glow-success' 
+                  : task.status === 'overdue' 
+                    ? 'bg-destructive/15 border-destructive/50 glow-destructive' 
+                    : 'border-border/50'
               }`}
             >
               <CardContent className="py-4">
@@ -350,7 +350,15 @@ export function TimelineTab({
                       {task.time}
                     </span>
                     <div>
-                      <h3 className="font-medium">{task.title}</h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-medium">{task.title}</h3>
+                        {task.status === 'done' && (
+                          <Badge className="bg-success text-success-foreground border-success/50">DONE</Badge>
+                        )}
+                        {task.status === 'overdue' && (
+                          <Badge variant="destructive">OVERDUE</Badge>
+                        )}
+                      </div>
                       {task.notes && (
                         <p className="text-sm opacity-80 mt-1">{task.notes}</p>
                       )}
