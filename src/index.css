@@ -108,7 +108,7 @@
   }
 
   .task-overdue {
-    @apply bg-destructive/20 text-destructive-foreground border-2 border-destructive;
+    @apply bg-destructive text-destructive-foreground;
   }
 
   .task-done {

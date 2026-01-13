@@ -349,17 +349,10 @@ export function TimelineTab({
                     <span className="font-mono text-lg font-semibold min-w-[60px]">
                       {task.time}
                     </span>
-                    <div className="flex items-center gap-3">
-                      <div>
-                        <h3 className="font-medium">{task.title}</h3>
-                        {task.notes && (
-                          <p className="text-sm opacity-80 mt-1">{task.notes}</p>
-                        )}
-                      </div>
-                      {task.status === 'overdue' && (
-                        <span className="px-2 py-0.5 text-xs font-bold uppercase tracking-wide bg-destructive text-destructive-foreground rounded">
-                          Overdue
-                        </span>
+                    <div>
+                      <h3 className="font-medium">{task.title}</h3>
+                      {task.notes && (
+                        <p className="text-sm opacity-80 mt-1">{task.notes}</p>
                       )}
                     </div>
                   </div>
