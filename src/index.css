@@ -104,15 +104,17 @@
   }
 
   .task-neutral {
-    @apply bg-[hsl(var(--neutral-task))] text-[hsl(var(--neutral-task-foreground))];
+    @apply bg-card border-border/50;
   }
 
   .task-overdue {
-    @apply bg-destructive text-destructive-foreground;
+    background: hsl(var(--destructive) / 0.15);
+    border: 1.5px solid hsl(var(--destructive) / 0.6);
   }
 
   .task-done {
-    @apply bg-[hsl(var(--success))] text-[hsl(var(--success-foreground))];
+    background: hsl(var(--success) / 0.15);
+    border: 1.5px solid hsl(var(--success) / 0.6);
   }
 
   .glow-primary {
